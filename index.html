@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Superstore Radial Tree</title>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+
+  <style>
+
+    body{
+      margin:0;
+      overflow:hidden;
+      background:#f5f5f5;
+      font-family:Arial;
+    }
+
+    svg{
+      width:100vw;
+      height:100vh;
+    }
+
+    .link{
+      fill:none;
+      stroke:#999;
+      stroke-opacity:0.6;
+      stroke-width:1.5px;
+    }
+
+    .node circle{
+      cursor:pointer;
+      transition:0.3s;
+    }
+
+    .node circle:hover{
+      r:8;
+      fill:red;
+    }
+
+    .node text{
+      font-size:11px;
+    }
+
+    /* TOOLTIP */
+
+    .tooltip{
+      position:absolute;
+      background:white;
+      padding:10px;
+      border-radius:8px;
+      box-shadow:0 2px 10px rgba(0,0,0,0.2);
+      pointer-events:none;
+      opacity:0;
+      transition:0.2s;
+      font-size:13px;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<h1 style="text-align:center;">
+  Superstore Radial Tree Diagram
+</h1>
+<h3 style="text-align:center; font-weight:400;">
+  Rania Nurbaity - 23082010134
+</h3>
+
+<div class="tooltip"></div>
+
+<svg></svg>
+
+<script>
+
+const width = window.innerWidth;
+const height = window.innerHeight;
+const radius = width / 2;
+
+const tooltip = d3.select(".tooltip");
+
+const svg = d3.select("svg")
+  .attr("viewBox", [-width/2, -height/2, width, height]);
+
+d3.json("data.json").then(data => {
+
+  const root = d3.hierarchy(data);
+
+  const tree = d3.tree()
+    .size([2 * Math.PI, radius - 120]);
+
+  tree(root);
+
+  // GARIS
+  svg.append("g")
+    .selectAll("path")
+    .data(root.links())
+    .join("path")
+    .attr("class","link")
+    .attr("d", d3.linkRadial()
+      .angle(d => d.x)
+      .radius(d => d.y)
+    );
+
+  // NODE
+  const node = svg.append("g")
+    .selectAll("g")
+    .data(root.descendants())
+    .join("g")
+    .attr("class","node")
+    .attr("transform", d => `
+      rotate(${d.x * 180 / Math.PI - 90})
+      translate(${d.y},0)
+    `);
+
+  // BULATAN
+  node.append("circle")
+    .attr("r",5)
+    .attr("fill", d => {
+
+      if(d.depth === 0) return "#ff4d4d";
+      if(d.depth === 1) return "#ffa64d";
+      if(d.depth === 2) return "#4dff88";
+
+      return "#4da6ff";
+    })
+
+    // TOOLTIP MOUSE OVER
+    .on("mouseover", (event, d) => {
+
+      tooltip
+        .style("opacity",1)
+        .html(`
+        <strong>${d.data.name}</strong><br>
+        Hierarchy: ${
+            d.depth === 0 ? "Root" :
+            d.depth === 1 ? "Tahun" :
+            d.depth === 2 ? "Quartal" :
+            "Category"
+        }
+        `);
+
+    })
+
+    // TOOLTIP MOVE
+    .on("mousemove", (event) => {
+
+      tooltip
+        .style("left", (event.pageX + 15) + "px")
+        .style("top", (event.pageY + 15) + "px");
+
+    })
+
+    // TOOLTIP HIDE
+    .on("mouseout", () => {
+
+      tooltip
+        .style("opacity",0);
+
+    });
+
+  // TEXT
+  node.append("text")
+    .attr("dy","0.31em")
+    .attr("x", d => d.x < Math.PI ? 10 : -10)
+    .attr("text-anchor", d => d.x < Math.PI ? "start" : "end")
+    .attr("transform", d => d.x >= Math.PI ? "rotate(180)" : null)
+    .text(d => d.data.name);
+
+});
+
+</script>
+
+</body>
+</html>
