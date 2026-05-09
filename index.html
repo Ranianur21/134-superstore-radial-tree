@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Superstore Radial Tree</title>
 
   <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -15,10 +15,35 @@
       font-family:Arial;
     }
 
+    /* TITLE */
+
+    .title{
+      position:absolute;
+      top:10px;
+      width:100%;
+      text-align:center;
+      z-index:10;
+    }
+
+    .title h1{
+      margin:0;
+      font-size:28px;
+    }
+
+    .title h3{
+      margin-top:5px;
+      font-weight:400;
+      color:gray;
+    }
+
+    /* SVG */
+
     svg{
       width:100vw;
       height:100vh;
     }
+
+    /* LINKS */
 
     .link{
       fill:none;
@@ -26,6 +51,8 @@
       stroke-opacity:0.6;
       stroke-width:1.5px;
     }
+
+    /* NODE */
 
     .node circle{
       cursor:pointer;
@@ -38,7 +65,7 @@
     }
 
     .node text{
-      font-size:11px;
+      font-size:10px;
     }
 
     /* TOOLTIP */
@@ -52,7 +79,7 @@
       pointer-events:none;
       opacity:0;
       transition:0.2s;
-      font-size:14px;
+      font-size:13px;
     }
 
   </style>
@@ -60,62 +87,70 @@
 
 <body>
 
-<h1 style="text-align:center;">
-  Superstore Radial Tree Diagram
-</h1>
-<h3 style="text-align:center; font-weight:400;">
-  Rania Nurbaity - 23082010134
-</h3>
+  <!-- TITLE -->
 
-<div class="tooltip"></div>
+  <div class="title">
+    <h1>Superstore Radial Tree Diagram</h1>
+    <h3>Rania Nurbaity - 23082010134</h3>
+  </div>
 
-<svg></svg>
+  <!-- TOOLTIP -->
+
+  <div class="tooltip"></div>
+
+  <!-- SVG -->
+
+  <svg></svg>
 
 <script>
 
 const width = window.innerWidth;
 const height = window.innerHeight;
-const radius = width / 2;
+const radius = Math.min(width, height) / 2 - 80;
 
 const tooltip = d3.select(".tooltip");
 
 const svg = d3.select("svg")
-  .attr("viewBox", [-width/2, -height/2, width, height]);
+  .attr("viewBox", [-width / 2, -height / 2, width, height]);
 
 d3.json("data.json").then(data => {
 
   const root = d3.hierarchy(data);
 
   const tree = d3.tree()
-    .size([2 * Math.PI, radius - 120]);
+    .size([2 * Math.PI, radius]);
 
   tree(root);
 
-  // GARIS
+  // LINKS
+
   svg.append("g")
     .selectAll("path")
     .data(root.links())
     .join("path")
-    .attr("class","link")
-    .attr("d", d3.linkRadial()
-      .angle(d => d.x)
-      .radius(d => d.y)
+    .attr("class", "link")
+    .attr("d",
+      d3.linkRadial()
+        .angle(d => d.x)
+        .radius(d => d.y)
     );
 
-  // NODE
+  // NODES
+
   const node = svg.append("g")
     .selectAll("g")
     .data(root.descendants())
     .join("g")
-    .attr("class","node")
+    .attr("class", "node")
     .attr("transform", d => `
       rotate(${d.x * 180 / Math.PI - 90})
       translate(${d.y},0)
     `);
 
-  // BULATAN
+  // CIRCLES
+
   node.append("circle")
-    .attr("r",5)
+    .attr("r", 5)
     .attr("fill", d => {
 
       if(d.depth === 0) return "#ff4d4d";
@@ -125,24 +160,27 @@ d3.json("data.json").then(data => {
       return "#4da6ff";
     })
 
-    // TOOLTIP MOUSE OVER
+    // TOOLTIP SHOW
+
     .on("mouseover", (event, d) => {
 
       tooltip
-        .style("opacity",1)
+        .style("opacity", 1)
         .html(`
-        <strong>${d.data.name}</strong><br>
-        Hierarchy: ${
+          <strong>${d.data.name}</strong><br>
+          Hierarchy:
+          ${
             d.depth === 0 ? "Root" :
             d.depth === 1 ? "Tahun" :
             d.depth === 2 ? "Quartal" :
             "Category"
-        }
+          }
         `);
 
     })
 
     // TOOLTIP MOVE
+
     .on("mousemove", (event) => {
 
       tooltip
@@ -152,16 +190,18 @@ d3.json("data.json").then(data => {
     })
 
     // TOOLTIP HIDE
+
     .on("mouseout", () => {
 
       tooltip
-        .style("opacity",0);
+        .style("opacity", 0);
 
     });
 
   // TEXT
+
   node.append("text")
-    .attr("dy","0.31em")
+    .attr("dy", "0.31em")
     .attr("x", d => d.x < Math.PI ? 10 : -10)
     .attr("text-anchor", d => d.x < Math.PI ? "start" : "end")
     .attr("transform", d => d.x >= Math.PI ? "rotate(180)" : null)
